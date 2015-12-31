@@ -3,48 +3,57 @@
   <head>
     <title>Fuoco-Pad</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css"> -->
+    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+    <!-- socket.io -->
+    <script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+    <!-- lodash -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script>
+
+    <!-- CodeMirror -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.css"/>
+
+    <!-- Firepad -->
+    <!--<link rel="stylesheet" href="https://cdn.firebase.com/libs/firepad/1.2.0/firepad.css" />-->
+    <link rel="stylesheet" href="./firepad.css" />
+    <script src="./firepad.js"></script>
     <link rel="stylesheet" href="./styles.css">
     <script>
       'use strict';
 
-      var fuocoPad = angular.module('fuocoPad', ['ngMaterial'])
+      var fuocoPad = angular.module('fuocoPad', [])
         .controller('FirstController', function() {
           var self = this;
           self.display = {
             documents: false,
             editor: true
           }
+          self.someTruth = false;
+          setTimeout(function() {initPad();}, 3000);
+
+          var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
+
+          var userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+          });
+
+          function initPad() {
+            self.firepad = Firepad.fromCodeMirror({server: 'http://127.0.0.1:3000', document: '646465465'}, codeMirror,
+            { userId: userId, richTextShortcuts: true, richTextToolbar: true});
+          }
         });
     </script>
   </head>
-  <body ng-controller="FirstController as model" ng-cloak>
+  <body ng-controller="FirstController as model">
+    <!--
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
-
-    <div layout="column" layout-fill>
-      <md-toolbar>
-        <div class="md-toolbar-tools">
-          <span>Fuoco-Pad</span>
-          <span flex></span>
-          <!-- <md-select ng-model="repoFilter" ng-model-options="{trackBy: '$value.id'}" placeholder="show">
-            <md-option ng-value="option" ng-repeat="option in repoFilterOptions">{{ option.name }}</md-option>
-          </md-select> -->
-
-          <md-button ng-click="refreshDirs()"><md-icon>refresh</md-icon></md-button>
-        </div>
-      </md-toolbar>
-      <md-content>
-        Model {{model.display | json}}
-      </md-content>
-      <md-content ng-if="model.display.documents">
-        Here's the document list
-      </md-content>
-      <md-content ng-if="model.display.editor">
-        Here's the editor.
-      </md-content>
+    -->
+    <div ng-show="model.display.editor">
+      <div id="firepad"></div>
     </div>
   </body>
 </html>
