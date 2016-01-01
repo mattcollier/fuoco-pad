@@ -2294,7 +2294,7 @@ firepad.AlternateAdapter = (function (global) {
       var revision = this.parseRevision_(pending[revisionId]);
       if (!revision) {
         // If a misbehaved client adds a bad operation, just ignore it.
-        utils.log('Invalid operation.', this.ref_.toString(), revisionId, pending[revisionId]);
+        utils.log('[AB] Invalid operation.', this.ref_.toString(), revisionId, pending[revisionId]);
       } else {
         this.document_ = this.document_.compose(revision.operation);
       }
@@ -2323,7 +2323,7 @@ firepad.AlternateAdapter = (function (global) {
       var revision = this.parseRevision_(pending[revisionId]);
       if (!revision) {
         // If a misbehaved client adds a bad operation, just ignore it.
-        utils.log('Invalid operation.', this.ref_.toString(), revisionId, pending[revisionId]);
+        utils.log('[AA] Invalid operation.', this.ref_.toString(), revisionId, pending[revisionId]);
       } else {
         this.document_ = this.document_.compose(revision.operation);
         if (this.sent_ && revisionId === this.sent_.id) {
@@ -2365,9 +2365,13 @@ firepad.AlternateAdapter = (function (global) {
       op = TextOperation.fromJSON(data.o);
     }
     catch (e) {
+      console.log('[PRB] FAIL');
       return null;
     }
     if (op.baseLength !== this.document_.targetLength) {
+      console.log('[PRA] FAIL');
+      console.log('OP.BASE_LENGTH', op.baseLength);
+      console.log('TARGET_LENGTH', this.document_.targetLength);
       return null;
     }
     return { author: data.a, operation: op }
