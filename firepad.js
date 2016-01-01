@@ -2173,7 +2173,9 @@ firepad.AlternateAdapter = (function (global) {
       var revision = {};
       revision[revisionId] = revisionData;
       console.log('[DO_TRANSATION A]', revision);
-      console.log('[revision]', revisionData.o[1], revisionData.o[1].length);
+      if(revisionId !== 'A0') {
+        console.log('[revision]', revisionData.o[1], revisionData.o[1].length);
+      }
       self.socket.emit('revision', revision);
     }
 
