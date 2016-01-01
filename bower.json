@@ -1,0 +1,21 @@
+{
+  "name": "fuoco-pad",
+  "version": "0.0.1",
+  "homepage": "https://github.com/mattcollier/fuoco-pad",
+  "authors": [
+    "Matthew Collier <collier.matthew@gmail.com>"
+  ],
+  "description": "A realtime collaborative document editor based on Firepad.",
+  "main": "index.html",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-material-data-table": "~0.9.4"
+  }
+}
