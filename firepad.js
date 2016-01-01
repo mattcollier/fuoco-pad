@@ -2042,9 +2042,7 @@ firepad.AlternateAdapter = (function (global) {
     this.request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     this.request.send(null);
     console.log('REQUEST_STATUS', this.request.status);
-    if(this.request.status === 201 || this.request.status === 409) {
-      this.socket = io(this.ref_.server + '/' + this.ref_.document);
-    } else {
+    if(!(this.request.status === 201 || this.request.status === 409)) {
       throw new Error('The server could not be contacted:' + this.ref_.server);
     }
 
@@ -2116,14 +2114,6 @@ firepad.AlternateAdapter = (function (global) {
     this.zombie_ = true;
   };
 
-  AlternateAdapter.prototype.setReady = function(ready) {
-    this.ready_ = ready;
-  };
-
-  AlternateAdapter.prototype.setRevision = function(revision) {
-    this.revision_ = revision;
-  };
-
   AlternateAdapter.prototype.setUserId = function(userId) {
     // FIXME: re-implement as required
     // if (this.userRef_) {
@@ -2163,8 +2153,9 @@ firepad.AlternateAdapter = (function (global) {
       });
       return;
     }
+
     // Sanity check that this operation is valid.
-    assert(this.document_.targetLength === operation.baseLength, "ALT sendOperation() called with invalid operation.");
+    assert(this.document_.targetLength === operation.baseLength, "sendOperation() called with invalid operation.");
 
     // Convert revision into an id that will sort properly lexicographically.
     var revisionId = revisionToId(this.revision_);
@@ -2173,14 +2164,13 @@ firepad.AlternateAdapter = (function (global) {
       var revision = {};
       revision[revisionId] = revisionData;
       console.log('[DO_TRANSATION A]', revision);
-      if(revisionId !== 'A0') {
-        console.log('[revision]', revisionData.o[1], revisionData.o[1].length);
-      }
-      self.socket.emit('revision', revision);
+      self.ref_.socket.emit('revision', revision);
     }
 
     this.sent_ = { id: revisionId, op: operation };
     // FIXME: is timestamp relevant?
+    // firebaseAdapter inserts a placeholder `Firebase.ServerValue.TIMESTAMP` which will be populated by the server
+    // https://www.firebase.com/docs/web/api/servervalue/
     // doTransaction(revisionId, { a: self.userId_, o: operation.toJSON(), t: Firebase.ServerValue.TIMESTAMP });
     doTransaction(
       revisionId, { a: self.userId_, o: operation.toJSON(), t: Date.now() });
@@ -2190,7 +2180,7 @@ firepad.AlternateAdapter = (function (global) {
     if(obj) {
       obj.userId = this.userId_;
     }
-    this.socket.emit('cursor', obj);
+    this.ref_.socket.emit('cursor', obj);
     this.cursor_ = obj;
   };
 
@@ -2222,7 +2212,7 @@ firepad.AlternateAdapter = (function (global) {
   AlternateAdapter.prototype.monitorCursors_ = function() {
     var self = this;
 
-    this.socket.on('cursor', function(e) {
+    this.ref_.socket.on('cursor', function(e) {
       // FIXME: reference cursor color based on userId
       if(e) {
         self.trigger('cursor', e.userId, e, '#b380ff');
@@ -2254,7 +2244,7 @@ firepad.AlternateAdapter = (function (global) {
 
   AlternateAdapter.prototype.monitorHistoryStartingAt_ = function(revision) {
     var self = this;
-    self.socket.on('revision', function(e) {
+    self.ref_.socket.on('revision', function(e) {
       _.assign(self.pendingReceivedRevisions_, e);
       if(self.ready_) {
         self.handlePendingReceivedRevisions_();
@@ -5440,8 +5430,9 @@ firepad.Firepad = (function(global) {
     if (this.codeMirror_)
       this.codeMirror_.refresh();
     // FIXME: some way to abstract this?
-    // var userId = this.getOption('userId', ref.push().key());
-    var userId = this.options_.userId;
+    var userId = this.getOption('userId', ref.push().key());
+    // FIXME: this causes test to fail
+    // var userId = this.options_.userId;
     var userColor = this.getOption('userColor', colorFromUserId(userId));
 
     this.entityManager_ = new EntityManager();

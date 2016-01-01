@@ -33,9 +33,11 @@
       var fuocoPad = angular.module('fuocoPad', ['ngMaterial', 'md.data.table'])
         .controller('FirstController', function($scope, $mdToast, $location, documentService) {
           var self = this;
+          var socket = null;
           var params = $location.search();
           self.docSelected = [];
           self.documents = {};
+
           // var x = uuid.v4();
           // self.documents[x] = {id: x, title: 'some title', lastModified: new Date().toJSON()};
           // x = uuid.v4();
@@ -73,13 +75,16 @@
 
           self.newDocument = function() {
             var newId = uuid.v4();
-            self.documents[newId] = {
-              id: newId, title: 'Untitled document', lastModified: new Date()
-            };
+            documentService.post(newId)
+              .then(function() {
+                getDocuments();
+              })
           };
 
           self.show = function(option) {
             // FIXME: only used for displaying document list, rename?
+            // destroy webSocket;
+            socket = null;
             documentScanner = scanDocuments();
             $location.url('/');
             _display(option)
@@ -87,7 +92,8 @@
 
           self.updateDocument = function(document) {
             // TODO: only deal with title now
-            documentService.put(document);
+            // documentService.put(document);
+            socket.emit('titleChange', {title: document.title});
           };
 
           if(params.d) {
@@ -115,11 +121,30 @@
           }
 
           function initPad(documentId, userId) {
+            var serverBaseUrl = 'https://sterns.t4k.org:3000';
+            socket = io(serverBaseUrl + '/' + documentId);
+            socket.on('titleChange', function(e) {
+              console.log('received title change', e.title);
+              self.documents[documentId].title = e.title;
+              $scope.$apply();
+            });
             // FIXME: is there a more elegant way to do this reinitialize?
             document.getElementById('firepad').innerHTML = "";
             var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
-            self.firepad = Firepad.fromCodeMirror({server: 'https://sterns.t4k.org:3000', document: documentId}, codeMirror,
-            { userId: userId, richTextShortcuts: true, richTextToolbar: true});
+            // NOTE: `push` function is for API compatibility only.
+            self.firepad = Firepad.fromCodeMirror({
+              server: 'https://sterns.t4k.org:3000',
+              document: documentId,
+              socket: socket,
+              push: function() {
+                return {key: function() {return 'VALUE_NOT_USED';}};
+              }
+            },
+            codeMirror, {
+              userId: userId,
+              richTextShortcuts: true,
+              richTextToolbar: true
+            });
           }
           function _display(showProperty) {
             for(var propertyName in self.display) {
@@ -131,6 +156,10 @@
         .factory('documentService', function($http) {
           var service = {};
           var serverBaseUrl = 'https://sterns.t4k.org:3000';
+          service.post = function(documentId) {
+            return Promise.resolve(
+              $http.post(serverBaseUrl + '/document/' + documentId));
+          };
           service.put = function(document) {
             return Promise.resolve(
               $http.put(
