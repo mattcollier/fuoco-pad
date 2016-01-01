@@ -11,6 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script>
     <!-- es6-promise -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.0.2/es6-promise.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
     <!-- CodeMirror -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.css"/>
@@ -115,10 +117,12 @@
           }
 
           function initPad(documentId, userId) {
+            var firepadRef = new Firebase('https://burning-heat-2167.firebaseio.com/fuocopads/' + documentId);
+            // var firepadRef = {server: 'https://sterns.t4k.org:3000', document: documentId};
             // FIXME: is there a more elegant way to do this reinitialize?
             document.getElementById('firepad').innerHTML = "";
             var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
-            self.firepad = Firepad.fromCodeMirror({server: 'https://sterns.t4k.org:3000', document: documentId}, codeMirror,
+            self.firepad = Firepad.fromCodeMirror(firepadRef, codeMirror,
             { userId: userId, richTextShortcuts: true, richTextToolbar: true});
           }
           function _display(showProperty) {
