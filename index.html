@@ -3,57 +3,191 @@
   <head>
     <title>Fuoco-Pad</title>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-    <!-- <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css"> -->
-    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- socket.io -->
     <script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
     <!-- lodash -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.js"></script>
-
+    <!-- es6-promise -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.0.2/es6-promise.min.js"></script>
     <!-- CodeMirror -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.css"/>
 
+    <!-- style sheet -->
+    <link href="bower_components/angular-material-data-table/dist/md-data-table.min.css" rel="stylesheet" type="text/css"/>
+    <!-- module -->
+    <script type="text/javascript" src="bower_components/angular-material-data-table/dist/md-data-table.min.js"></script>
+
     <!-- Firepad -->
-    <!--<link rel="stylesheet" href="https://cdn.firebase.com/libs/firepad/1.2.0/firepad.css" />-->
     <link rel="stylesheet" href="./firepad.css" />
     <script src="./firepad.js"></script>
     <link rel="stylesheet" href="./styles.css">
     <script>
       'use strict';
 
-      var fuocoPad = angular.module('fuocoPad', [])
-        .controller('FirstController', function() {
+      var fuocoPad = angular.module('fuocoPad', ['ngMaterial', 'md.data.table'])
+        .controller('FirstController', function($scope, $mdToast, $location, documentService) {
           var self = this;
+          var params = $location.search();
+          self.docSelected = [];
+          self.documents = {};
+          // var x = uuid();
+          // self.documents[x] = {id: x, title: 'some title', lastModified: new Date().toJSON()};
+          // x = uuid();
+          // self.documents[x] = {id: x, title: 'some title 2', lastModified: new Date('10-30-2014').toJSON()};
+
           self.display = {
             documents: false,
-            editor: true
+            editor: false
           }
-          self.someTruth = false;
-          setTimeout(function() {initPad();}, 3000);
 
-          var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
+          getDocuments();
+          setInterval(function() {
+            getDocuments();
+          }, 5000);
 
-          var userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          self.currentDocumentId = null;
+
+          // FIXME: remove watch template
+          // $scope.$watch(function(scope) {
+          //   return (self.currentDocument.title)
+          // }, function(newValue, oldValue) {
+          //   console.log('new:', newValue, 'old:', oldValue);
+          // });
+
+          self.userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
             return v.toString(16);
           });
 
-          function initPad() {
-            self.firepad = Firepad.fromCodeMirror({server: 'http://127.0.0.1:3000', document: '646465465'}, codeMirror,
+          self.editDocument = function(documentId) {
+            // TODO: make better use of checked items
+            // uncheck the boxes on the document list
+            self.docSelected = [];
+            // FIXME: this is temporary
+            self.currentDocumentId = documentId;
+            $location.url('?d=' + documentId);
+            initPad(documentId, self.userId);
+            _display('editor');
+          };
+
+          self.newDocument = function() {
+            var newId = uuid();
+            self.documents[newId] = {
+              id: newId, title: 'Untitled document', lastModified: new Date()
+            };
+          };
+
+          self.show = function(option) {
+            $location.url('/');
+            _display(option)
+          };
+
+          self.updateDocument = function(document) {
+            // TODO: only deal with title now
+            documentService.put(document);
+          };
+
+          if(params.d) {
+            self.editDocument(params.d);
+          } else {
+            _display('documents');
+          }
+
+          function getDocuments() {
+            documentService.get()
+            .then(function(result) {
+              if(result.status === 200) {
+                self.documents = result.data;
+              }
+            });
+          }
+
+          function initPad(documentId, userId) {
+            // FIXME: is there a more elegant way to do this reinitialize?
+            document.getElementById('firepad').innerHTML = "";
+            var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
+            self.firepad = Firepad.fromCodeMirror({server: 'https://sterns.t4k.org:3000', document: documentId}, codeMirror,
             { userId: userId, richTextShortcuts: true, richTextToolbar: true});
           }
+          function _display(showProperty) {
+            for(var propertyName in self.display) {
+              self.display[propertyName] = false;
+            }
+            self.display[showProperty] = true;
+          }
+          function uuid() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
+              return v.toString(16);
+            });
+          }
+        })
+        .factory('documentService', function($http) {
+          var service = {};
+          var serverBaseUrl = 'https://sterns.t4k.org:3000';
+          service.put = function(document) {
+            return Promise.resolve(
+              $http.put(
+                serverBaseUrl + '/document/' + document.id,
+                document
+              ));
+          };
+          service.get = function() {
+            return Promise.resolve($http.get(serverBaseUrl + '/document'));
+          };
+          return service;
         });
     </script>
   </head>
-  <body ng-controller="FirstController as model">
-    <!--
+  <body ng-controller="FirstController as model" ng-cloak>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.0.0/angular-material.min.js"></script>
-    -->
-    <div ng-show="model.display.editor">
-      <div id="firepad"></div>
+    <div layout="column" layout-fill>
+      <md-toolbar>
+      <div class="md-toolbar-tools">
+        <span ng-if="model.display.documents">Fuoco-Pad</span>
+        <span ng-if="model.display.editor"><input type="text"
+          ng-blur="model.updateDocument(model.documents[model.currentDocumentId])"
+          ng-model="model.documents[model.currentDocumentId].title"></span>
+        <span flex></span>
+        <md-button ng-click="refreshDirs()"><md-icon>refresh</md-icon></md-button>
+      </div>
+      </md-toolbar>
+      <div layout="row">
+        <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-is-locked-open="$mdMedia('min-width: 600px')">
+          <md-list>
+            <md-list-item ng-if="model.display.documents">
+              <md-button ng-click="model.newDocument()" class="md-raised md-warn btn-sidenav">New</md-button>
+            </md-list-item>
+            <md-list-item ng-if="model.display.editor">
+              <md-button ng-click="model.show('documents')" class="md-raised md-primary btn-sidenav">Main</md-button>
+            </md-list>
+          </md-list>
+        </md-sidenav>
+        <md-content ng-if="model.display.documents" flex layout-padding>
+          <table md-table md-row-select="true" ng-model="model.docSelected">
+            <thead md-head md-order="docSortOrder">
+              <tr md-row>
+                <th md-column md-order-by="title"><span>Document Title</span></th>
+                <th md-column md-order-by="lastModified"><span>Last Modified</span></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row md-select="document.id" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: docSortOrder">
+                <td md-cell>{{document.title}}</md-cell>
+                <td md-cell>{{document.lastModified | date}}</md-cell>
+              </tr>
+            </tbody>
+          </table>
+        </md-content>
+        <div ng-show="model.display.editor">
+          <div id="firepad"></div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
