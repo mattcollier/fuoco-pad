@@ -15,10 +15,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.10.0/codemirror.css"/>
 
-    <!-- style sheet -->
+    <!-- Angular Data Table style sheet -->
     <link href="bower_components/angular-material-data-table/dist/md-data-table.min.css" rel="stylesheet" type="text/css"/>
-    <!-- module -->
-    <script type="text/javascript" src="bower_components/angular-material-data-table/dist/md-data-table.min.js"></script>
+    <!-- Angular Data Table module -->
+    <script src="bower_components/angular-material-data-table/dist/md-data-table.min.js"></script>
+
+    <!-- node-uuid -->
+    <script src="bower_components/node-uuid/uuid.js"></script>
 
     <!-- Firepad -->
     <link rel="stylesheet" href="./firepad.css" />
@@ -33,9 +36,9 @@
           var params = $location.search();
           self.docSelected = [];
           self.documents = {};
-          // var x = uuid();
+          // var x = uuid.v4();
           // self.documents[x] = {id: x, title: 'some title', lastModified: new Date().toJSON()};
-          // x = uuid();
+          // x = uuid.v4();
           // self.documents[x] = {id: x, title: 'some title 2', lastModified: new Date('10-30-2014').toJSON()};
 
           self.display = {
@@ -43,10 +46,7 @@
             editor: false
           }
 
-          getDocuments();
-          setInterval(function() {
-            getDocuments();
-          }, 5000);
+          var documentScanner = scanDocuments();
 
           self.currentDocumentId = null;
 
@@ -57,12 +57,10 @@
           //   console.log('new:', newValue, 'old:', oldValue);
           // });
 
-          self.userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
-            return v.toString(16);
-          });
+          self.userId = uuid.v4();
 
           self.editDocument = function(documentId) {
+            clearInterval(documentScanner);
             // TODO: make better use of checked items
             // uncheck the boxes on the document list
             self.docSelected = [];
@@ -74,13 +72,15 @@
           };
 
           self.newDocument = function() {
-            var newId = uuid();
+            var newId = uuid.v4();
             self.documents[newId] = {
               id: newId, title: 'Untitled document', lastModified: new Date()
             };
           };
 
           self.show = function(option) {
+            // FIXME: only used for displaying document list, rename?
+            documentScanner = scanDocuments();
             $location.url('/');
             _display(option)
           };
@@ -96,11 +96,20 @@
             _display('documents');
           }
 
+          function scanDocuments(interval) {
+            var interval = interval || 2000;
+            getDocuments();
+            return setInterval(function() {
+              getDocuments();
+            }, interval);
+          }
+
           function getDocuments() {
             documentService.get()
             .then(function(result) {
               if(result.status === 200) {
                 self.documents = result.data;
+                $scope.$apply();
               }
             });
           }
@@ -117,12 +126,6 @@
               self.display[propertyName] = false;
             }
             self.display[showProperty] = true;
-          }
-          function uuid() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-              var r = crypto.getRandomValues(new Uint8Array(1))[0]%16|0, v = c == 'x' ? r : (r&0x3|0x8);
-              return v.toString(16);
-            });
           }
         })
         .factory('documentService', function($http) {
@@ -153,8 +156,10 @@
         <span ng-if="model.display.editor"><input type="text"
           ng-blur="model.updateDocument(model.documents[model.currentDocumentId])"
           ng-model="model.documents[model.currentDocumentId].title"></span>
+        <!--
         <span flex></span>
         <md-button ng-click="refreshDirs()"><md-icon>refresh</md-icon></md-button>
+        -->
       </div>
       </md-toolbar>
       <div layout="row">
@@ -164,7 +169,10 @@
               <md-button ng-click="model.newDocument()" class="md-raised md-warn btn-sidenav">New</md-button>
             </md-list-item>
             <md-list-item ng-if="model.display.editor">
-              <md-button ng-click="model.show('documents')" class="md-raised md-primary btn-sidenav">Main</md-button>
+              <md-button ng-click="model.show('documents')"
+              class="md-raised md-primary btn-sidenav">
+                Main
+              </md-button>
             </md-list>
           </md-list>
         </md-sidenav>
