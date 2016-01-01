@@ -1988,6 +1988,7 @@ firepad.EditorClient = (function () {
   };
 
   EditorClient.prototype.sendOperation = function (operation) {
+    console.log('[EditorClient A]', operation);
     this.serverAdapter.sendOperation(operation);
     this.emitStatus();
   };
@@ -2171,6 +2172,8 @@ firepad.AlternateAdapter = (function (global) {
     function doTransaction(revisionId, revisionData) {
       var revision = {};
       revision[revisionId] = revisionData;
+      console.log('[DO_TRANSATION A]', revision);
+      console.log('[revision]', revisionData.o[1], revisionData.o[1].length);
       self.socket.emit('revision', revision);
     }
 
