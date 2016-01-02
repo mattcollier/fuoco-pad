@@ -1692,7 +1692,6 @@ firepad.Client = (function () {
   Synchronized.prototype.applyClient = function (client, operation) {
     // When the user makes an edit, send the operation to the server and
     // switch to the 'AwaitingConfirm' state
-    console.log('CLIENT_SEND_OPERATION_A', operation);
     client.sendOperation(operation);
     return new AwaitingConfirm(operation);
   };
@@ -1753,7 +1752,6 @@ firepad.Client = (function () {
   };
 
   AwaitingConfirm.prototype.serverRetry = function (client) {
-    console.log('CLIENT_SEND_OPERATION_B', this.outstanding);
     client.sendOperation(this.outstanding);
     return this;
   };
@@ -1801,7 +1799,6 @@ firepad.Client = (function () {
   AwaitingWithBuffer.prototype.serverRetry = function (client) {
     // Merge with our buffer and resend.
     var outstanding = this.outstanding.compose(this.buffer);
-        console.log('CLIENT_SEND_OPERATION_C', outstanding);
     client.sendOperation(outstanding);
     return new AwaitingConfirm(outstanding);
   };
@@ -1809,7 +1806,6 @@ firepad.Client = (function () {
   AwaitingWithBuffer.prototype.serverAck = function (client) {
     // The pending operation has been acknowledged
     // => send buffer
-        console.log('CLIENT_SEND_OPERATION_D', this.buffer);
     client.sendOperation(this.buffer);
     return new AwaitingConfirm(this.buffer);
   };
@@ -1992,7 +1988,6 @@ firepad.EditorClient = (function () {
   };
 
   EditorClient.prototype.sendOperation = function (operation) {
-    console.log('[EditorClient A]', operation);
     this.serverAdapter.sendOperation(operation);
     this.emitStatus();
   };
@@ -2045,7 +2040,6 @@ firepad.AlternateAdapter = (function (global) {
     this.request.open('POST', this.ref_.server + '/document/' + this.ref_.document, false);
     this.request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
     this.request.send(null);
-    console.log('REQUEST_STATUS', this.request.status);
     if(!(this.request.status === 201 || this.request.status === 409)) {
       throw new Error('The server could not be contacted:' + this.ref_.server);
     }
@@ -2167,7 +2161,6 @@ firepad.AlternateAdapter = (function (global) {
     function doTransaction(revisionId, revisionData) {
       var revision = {};
       revision[revisionId] = revisionData;
-      console.log('[DO_TRANSATION A]', revision);
       self.ref_.socket.emit('revision', revision);
     }
 
@@ -2264,7 +2257,6 @@ firepad.AlternateAdapter = (function (global) {
       if(self.request.status === 200) {
         _.assign(
           self.pendingReceivedRevisions_, JSON.parse(self.request.responseText));
-        console.log('$$$$$$$$$$$$$$$ ONLY RUN ONCE $$$$$$$$$$$$$$$$$$$$$$$');
         self.handleInitialRevisions_();
       }
     }, 0);
@@ -2328,22 +2320,15 @@ firepad.AlternateAdapter = (function (global) {
         this.document_ = this.document_.compose(revision.operation);
         if (this.sent_ && revisionId === this.sent_.id) {
           // We have an outstanding change at this revision id.
-          console.log('CHECKING_REVISION -----', revisionId);
-          console.log('SENT_OP:', this.sent_.op);
-          console.log('REVISION_OP:', revision.operation);
-          console.log('REVISION_AUTHOR:', revision.author);
-          console.log('THIS_USERID:', this.userId_);
           if (this.sent_.op.equals(revision.operation) && revision.author === this.userId_) {
             // This is our change; it succeeded.
             // FIXME: enable checkpoints
             // if (this.revision_ % CHECKPOINT_FREQUENCY === 0) {
             //   this.saveCheckpoint_();
             // }
-            console.log('TRIGGER_ACK');
             this.sent_ = null;
             this.trigger('ack');
           } else {
-            console.log('TRIGGER_RETRY');
             // our op failed.  Trigger a retry after we're done catching up on any incoming ops.
             triggerRetry = true;
             this.trigger('operation', revision.operation);
@@ -2352,14 +2337,12 @@ firepad.AlternateAdapter = (function (global) {
           this.trigger('operation', revision.operation);
         }
       }
-      console.log('DELETING_REVISION ---------', revisionId);
       delete pending[revisionId];
 
       revisionId = revisionToId(this.revision_);
     }
 
     if (triggerRetry) {
-      console.log('ALTERNATE_ADAPTER_TRIGGER_RETRY_TRUE');
       this.sent_ = null;
       this.trigger('retry');
     }
@@ -2374,13 +2357,9 @@ firepad.AlternateAdapter = (function (global) {
       op = TextOperation.fromJSON(data.o);
     }
     catch (e) {
-      console.log('[PRB] FAIL');
       return null;
     }
     if (op.baseLength !== this.document_.targetLength) {
-      console.log('[PRA] FAIL');
-      console.log('OP.BASE_LENGTH', op.baseLength);
-      console.log('TARGET_LENGTH', this.document_.targetLength);
       return null;
     }
     return { author: data.a, operation: op }
@@ -2395,14 +2374,12 @@ firepad.AlternateAdapter = (function (global) {
   };
 
   AlternateAdapter.prototype.firebaseOn_ = function(ref, eventType, callback, context) {
-    console.log('REGISTERING_FIREBASE_CALLBACK', eventType);
     this.firebaseCallbacks_.push({ref: ref, eventType: eventType, callback: callback, context: context });
     ref.on(eventType, callback, context);
     return callback;
   };
 
   AlternateAdapter.prototype.firebaseOff_ = function(ref, eventType, callback, context) {
-    console.log('REGISTERING_FIREBASE_CALLBACK_OFF', eventType);
     ref.off(eventType, callback, context);
     for(var i = 0; i < this.firebaseCallbacks_.length; i++) {
       var l = this.firebaseCallbacks_[i];
@@ -2414,7 +2391,6 @@ firepad.AlternateAdapter = (function (global) {
   };
 
   AlternateAdapter.prototype.removeFirebaseCallbacks_ = function() {
-    console.log('REMOVOVING_ALL_FIREBASE_CALLBACKS', eventType);
     for(var i = 0; i < this.firebaseCallbacks_.length; i++) {
       var l = this.firebaseCallbacks_[i];
       l.ref.off(l.eventType, l.callback, l.context);
