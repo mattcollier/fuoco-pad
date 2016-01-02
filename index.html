@@ -50,7 +50,7 @@
 
           var documentScanner = scanDocuments();
 
-          self.currentDocumentId = null;
+          self.currentDocument = null;
 
           // FIXME: remove watch template
           // $scope.$watch(function(scope) {
@@ -61,15 +61,15 @@
 
           self.userId = uuid.v4();
 
-          self.editDocument = function(documentId) {
+          self.editDocument = function(document) {
             clearInterval(documentScanner);
             // TODO: make better use of checked items
             // uncheck the boxes on the document list
             self.docSelected = [];
             // FIXME: this is temporary
-            self.currentDocumentId = documentId;
-            $location.url('?d=' + documentId);
-            initPad(documentId, self.userId);
+            self.currentDocument = document;
+            $location.url('?d=' + document.id);
+            initPad(document.id, self.userId);
             _display('editor');
           };
 
@@ -183,8 +183,8 @@
       <div class="md-toolbar-tools">
         <span ng-if="model.display.documents">Fuoco-Pad</span>
         <span ng-if="model.display.editor"><input type="text"
-          ng-blur="model.updateDocument(model.documents[model.currentDocumentId])"
-          ng-model="model.documents[model.currentDocumentId].title"></span>
+          ng-blur="model.updateDocument(model.currentDocument)"
+          ng-model="model.currentDocument.title"></span>
         <!--
         <span flex></span>
         <md-button ng-click="refreshDirs()"><md-icon>refresh</md-icon></md-button>
@@ -214,7 +214,7 @@
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row md-select="document.id" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: docSortOrder">
+              <tr md-row md-select="document" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: docSortOrder">
                 <td md-cell>{{document.title}}</md-cell>
                 <td md-cell>{{document.lastModified | date:'medium'}}</md-cell>
               </tr>
