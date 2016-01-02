@@ -216,7 +216,7 @@
             <tbody md-body>
               <tr md-row md-select="document.id" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: docSortOrder">
                 <td md-cell>{{document.title}}</md-cell>
-                <td md-cell>{{document.lastModified | date}}</md-cell>
+                <td md-cell>{{document.lastModified | date:'medium'}}</md-cell>
               </tr>
             </tbody>
           </table>
