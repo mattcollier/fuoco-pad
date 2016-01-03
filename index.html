@@ -186,7 +186,7 @@
             var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
             // NOTE: `push` function is for Firebase API compatibility only.
             self.firepad = Firepad.fromCodeMirror({
-              server: 'https://https://localhost:3000',
+              server: 'https://localhost:3000',
               document: myDocument.id,
               socket: socket,
               push: function() {
