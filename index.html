@@ -258,7 +258,7 @@
         <md-button ng-click="model.openSideNavPanel()" class="menu" hide-gt-xs>
           <md-icon>&#xE5D2;</md-icon>
         </md-button>
-        <span ng-if="model.display.documents || model.display.searchResults || model.display.busy || model.display.documentNotFound" flex="20">
+        <span flex="20">
           Fuoco-Pad
         </span>
         <span ng-if="model.display.documents || model.display.searchResults || model.display.busy">
@@ -266,18 +266,18 @@
           <input type="text" fuaco-enter="model.searchDocuments()"
           placeholder="Search Documents" ng-model="model.search.text" aria-label="Search Documents"></input>
         </span>
-        <span ng-if="model.display.editor">
-          <md-input-container class="md-block">
-            <input type="text"
-            ng-blur="model.updateDocument(model.currentDocument)"
-            ng-model="model.currentDocument.title" aria-label="Document Title"></input>
-          </md-input-container>
-        </span>
       </div>
       </md-toolbar>
       <div layout="column" layout-fill>
         <md-toolbar class="md-whiteframe-z2 md-hue-3">
         <div class="md-toolbar-tools">
+          <span ng-if="model.display.editor">
+            <md-input-container class="md-block">
+              <input type="text"
+              ng-blur="model.updateDocument(model.currentDocument)"
+              ng-model="model.currentDocument.title" aria-label="Document Title"></input>
+            </md-input-container>
+          </span>          
           <span flex="25"></span>
           <span ng-if="model.display.searchResults || model.display.busy">Search results</span>
         </div>
