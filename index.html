@@ -138,6 +138,7 @@
           if(params.d) {
             getDocuments().then(function() {
               var index = _.findIndex(self.documents, {id: params.d});
+              console.log('INDEX', index);
               self.editDocument(self.documents[index]);
             });
           } else {
