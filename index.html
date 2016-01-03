@@ -58,6 +58,7 @@
 
           self.display = {
             documents: false,
+            documentNotFound: false,
             editor: false,
             searchResults: false,
             busy: false
@@ -139,7 +140,9 @@
             getDocuments().then(function() {
               var index = _.findIndex(self.documents, {id: params.d});
               if(index === -1) {
-                return _display('documents');
+                delete params.d;
+                _display('documentNotFound');
+                return $scope.$apply();
               }
               self.editDocument(self.documents[index]);
             });
@@ -255,7 +258,7 @@
         <md-button ng-click="model.openSideNavPanel()" class="menu" hide-gt-xs>
           <md-icon>&#xE5D2;</md-icon>
         </md-button>
-        <span ng-if="model.display.documents || model.display.searchResults || model.display.busy" flex="20">
+        <span ng-if="model.display.documents || model.display.searchResults || model.display.busy || model.display.documentNotFound" flex="20">
           Fuoco-Pad
         </span>
         <span ng-if="model.display.documents || model.display.searchResults || model.display.busy">
@@ -289,7 +292,7 @@
                 New
               </md-button>
             </md-list-item>
-            <md-list-item ng-if="model.display.editor || model.display.searchResults">
+            <md-list-item ng-if="model.display.editor || model.display.searchResults || model.display.documentNotFound">
               <md-button ng-click="model.show('documents')"
               class="md-raised md-primary btn-sidenav">
                 Main
@@ -297,6 +300,11 @@
             </md-list>
           </md-list>
         </md-sidenav>
+        <!-- Document Not Found -->
+        <md-content ng-if="model.display.documentNotFound" flex layout-padding>
+          <h3>The document you requested no longer exists.</h3>
+        </md-content>
+        <!-- Documents List -->
         <md-content ng-if="model.display.documents" flex layout-padding>
           <table md-table md-row-select="true" ng-model="model.docSelected">
             <thead md-head md-order="docSortOrder">
@@ -313,6 +321,7 @@
             </tbody>
           </table>
         </md-content>
+
         <md-content ng-if="model.display.busy" flex>
           <span flex us-spinner="{radius:30, width:8, length: 16}"></span>
         </md-content>
