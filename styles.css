@@ -1,7 +1,10 @@
 /* Height / width / positioning can be customized for your use case.
    For demo purposes, we make the user list 175px and firepad fill the rest of the page. */
+md-input-container {
+  padding-top: 15px;
+}
 #firepad {
-  position: absolute; left: 210px; top: 50px; bottom: 0; right: 0; height: auto;
+  position: absolute; left: 210px; top: 110px; bottom: 0; right: 0; height: auto;
 }
 .md-sidenav-left {
   width: 200px;
