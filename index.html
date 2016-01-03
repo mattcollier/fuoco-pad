@@ -169,7 +169,7 @@
           }
 
           function initPad(myDocument, userId) {
-            var serverBaseUrl = 'https://fuoco.floydcommons.com:3000';
+            var serverBaseUrl = 'https://localhost:3000';
             socket = io(serverBaseUrl + '/' + myDocument.id);
             socket.on('titleChange', function(e) {
               console.log('received title change', e.title);
@@ -186,7 +186,7 @@
             var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
             // NOTE: `push` function is for Firebase API compatibility only.
             self.firepad = Firepad.fromCodeMirror({
-              server: 'https://fuoco.floydcommons.com:3000',
+              server: 'https://https://localhost:3000',
               document: myDocument.id,
               socket: socket,
               push: function() {
@@ -229,7 +229,7 @@
         })
         .factory('documentService', function($http) {
           var service = {};
-          var serverBaseUrl = 'https://fuoco.floydcommons.com:3000';
+          var serverBaseUrl = 'https://localhost:3000';
           service.post = function(documentId) {
             return Promise.resolve(
               $http.post(serverBaseUrl + '/document/' + documentId));
