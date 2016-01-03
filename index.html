@@ -214,7 +214,7 @@
         })
         .factory('searchService', function($http) {
           var service = {};
-          var serverBaseUrl = 'https://fuoco-index.dev:3100';
+          var serverBaseUrl = 'https://sterns.t4k.org:3100';
           service.search = function(query) {
             return Promise.resolve(
               $http.post(serverBaseUrl + '/search/' + query));
