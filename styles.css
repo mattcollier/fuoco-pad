@@ -6,6 +6,14 @@ md-input-container {
 #firepad {
   position: absolute; left: 210px; top: 110px; bottom: 0; right: 0; height: auto;
 }
+tr.md-row {
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
 .md-sidenav-left {
   width: 200px;
 }
@@ -19,9 +27,9 @@ md-input-container {
 .yellow {
   background: #ffff8d; }
 .blue {
-  background: #84ffff; }
+  background: #66a3ff; }
 .purple {
-  background: #b388ff; }
+  background: #ccccff; }
 .red {
   background: #ff8a80; }
 .pad-left-10 {

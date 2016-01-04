@@ -313,7 +313,7 @@
         </md-content>
         <!-- Documents List -->
         <md-content ng-if="model.display.documents" flex layout-padding>
-          <table md-table md-row-select="true" ng-model="model.docSelected">
+          <table md-table>
             <thead md-head md-order="model.docSortOrder">
               <tr md-row>
                 <th md-column md-order-by="title"><span>Document Title</span></th>
@@ -321,7 +321,10 @@
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row md-select="document" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: model.docSortOrder">
+              <tr md-row ng-click="model.docSelected[0] = document"
+                ng-class="{'purple': model.docSelected[0] === document}"
+                ng-dblclick="model.editDocument(document)"
+                ng-repeat="document in model.documents | orderBy: model.docSortOrder">
                 <td md-cell>{{document.title}}</md-cell>
                 <td md-cell>{{document.lastModified | date:'medium'}}</md-cell>
               </tr>
