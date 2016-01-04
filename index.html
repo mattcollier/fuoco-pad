@@ -65,7 +65,9 @@
             busy: false
           }
 
-          var documentScanner = scanDocuments();
+          // FIXME: remodelling document list updates
+          // var documentScanner = scanDocuments();
+          getDocuments();
 
           self.currentDocument = null;
 
@@ -98,7 +100,8 @@
           };
 
           self.editDocument = function(myDocument) {
-            clearInterval(documentScanner);
+            // FIXME: remove
+            // clearInterval(documentScanner);
             // TODO: make better use of checked items
             // uncheck the boxes on the document list
             self.docSelected = [];
@@ -132,7 +135,7 @@
             // destroy webSocket;
             socket = null;
             self.search.text = '';
-            documentScanner = scanDocuments();
+            // documentScanner = scanDocuments();
             $location.url('/');
             _display(option)
           };
