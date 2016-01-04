@@ -53,6 +53,7 @@
           var socket = null;
           var params = $location.search();
           self.docSelected = [];
+          self.docSortOrder = '-lastModified'
           self.searchDocSelected = [];
           self.documents = {};
 
@@ -313,14 +314,14 @@
         <!-- Documents List -->
         <md-content ng-if="model.display.documents" flex layout-padding>
           <table md-table md-row-select="true" ng-model="model.docSelected">
-            <thead md-head md-order="docSortOrder">
+            <thead md-head md-order="model.docSortOrder">
               <tr md-row>
                 <th md-column md-order-by="title"><span>Document Title</span></th>
                 <th md-column md-order-by="lastModified"><span>Last Modified</span></th>
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row md-select="document" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: docSortOrder">
+              <tr md-row md-select="document" md-auto-select="true" md-on-select="model.editDocument" ng-repeat="document in model.documents | orderBy: model.docSortOrder">
                 <td md-cell>{{document.title}}</md-cell>
                 <td md-cell>{{document.lastModified | date:'medium'}}</md-cell>
               </tr>
@@ -337,7 +338,7 @@
               <thead md-head md-order="docSortOrder">
                 <tr md-row>
                   <th md-column md-order-by="title"><span>Document Title</span></th>
-                  <th md-column md-order-by="lastModified"><span>Last Modified</span></th>
+                  <th md-column md-order-by="lastModified" md-desc><span>Last Modified</span></th>
                 </tr>
               </thead>
               <tbody md-body>
