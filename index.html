@@ -113,11 +113,17 @@
           };
 
           self.newDocument = function() {
-            var newId = uuid.v4();
-            documentService.post(newId)
+            var newDocument = {
+              id: uuid.v4(),
+              title: 'Untitled Document'
+            };
+            documentService.post(newDocument.id)
               .then(function() {
-                getDocuments();
+                self.editDocument(newDocument);
               })
+              .then(function() {
+                $scope.$apply();
+              });
           };
 
           self.show = function(option) {
