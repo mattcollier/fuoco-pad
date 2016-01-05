@@ -50,12 +50,13 @@
           self.search = {};
           self.search.text = '';
           self.search.results = [];
-          var socket = null;
+          var sockets = {};
           var params = $location.search();
           self.docSelected = [];
           self.docSortOrder = '-lastModified'
           self.searchDocSelected = [];
-          self.documents = {};
+          self.documents = [];
+          self.serverBaseUrl = 'https://localhost:3000';
 
           self.display = {
             documents: false,
@@ -67,7 +68,30 @@
 
           // FIXME: remodelling document list updates
           // var documentScanner = scanDocuments();
-          getDocuments();
+          getDocuments()
+            .then(function() {
+              sockets.documentsMeta = io(self.serverBaseUrl + '/documents-meta');
+              sockets.documentsMeta.on('documentsMeta', function(e) {
+                e.forEach(function(update) {
+                  var match = _.find(self.documents, {id: update.id});
+                  if(match) {
+                    var index = _.indexOf(self.documents, match);
+                    _.assign(self.documents[index], update);
+                  } else {
+                    self.documents.push(update);
+                  }
+                })
+                $scope.$apply();
+              });
+              sockets.documentsMeta.on('documentDelete', function(e) {
+                var index =
+                  _.indexOf(self.documents, _.find(self.documents, e));
+                if(index >= 0) {
+                  self.documents.splice(index, 1);
+                  $scope.$apply();
+                }
+              });
+            });
 
           self.currentDocument = null;
 
@@ -133,17 +157,26 @@
           self.show = function(option) {
             // FIXME: only used for displaying document list, rename?
             // destroy webSocket;
-            socket = null;
+            // FIXME: destroying socket with disconnect does not allow to
+            // reconnect to the same channel again until restart
+            // sockets.documentRevisions.disconnect();
+            // delete sockets.documentRevisions;
+            // NOTE: this method works, but does it do anything?
+            sockets.documentRevisions = null;
             self.search.text = '';
             // documentScanner = scanDocuments();
             $location.url('/');
             _display(option)
           };
 
+          self.deleteDocument = function(myDocument) {
+            // FIXME: confirm message?
+            documentService.delete(myDocument.id);
+          }
+
           self.updateDocument = function(myDocument) {
             // TODO: only deal with title now
-            // documentService.put(document);
-            socket.emit('titleChange', {title: myDocument.title});
+            sockets.documentRevisions.emit('titleChange', {title: myDocument.title});
           };
 
           if(params.d) {
@@ -179,10 +212,8 @@
           }
 
           function initPad(myDocument, userId) {
-            var serverBaseUrl = 'https://localhost:3000';
-            socket = io(serverBaseUrl + '/' + myDocument.id);
-            socket.on('titleChange', function(e) {
-              console.log('received title change', e.title);
+            sockets.documentRevisions = io(self.serverBaseUrl + '/' + myDocument.id);
+            sockets.documentRevisions.on('titleChange', function(e) {
               for(var doc in self.documents) {
                 if(self.documents[doc].id === myDocument.id) {
                   self.documents[doc].title = e.title;
@@ -198,7 +229,7 @@
             self.firepad = Firepad.fromCodeMirror({
               server: 'https://localhost:3000',
               document: myDocument.id,
-              socket: socket,
+              socket: sockets.documentRevisions,
               push: function() {
                 return {key: function() {return 'VALUE_NOT_USED';}};
               }
@@ -243,6 +274,10 @@
           service.post = function(documentId) {
             return Promise.resolve(
               $http.post(serverBaseUrl + '/document/' + documentId));
+          };
+          service.delete = function(documentId) {
+            return Promise.resolve(
+              $http.delete(serverBaseUrl + '/document/' + documentId));
           };
           service.put = function(myDocument) {
             return Promise.resolve(
@@ -289,6 +324,12 @@
             </md-input-container>
           </span>
           <span flex="25"></span>
+          <span ng-if="model.display.documents && model.docSelected[0]">
+            <md-button ng-click="model.deleteDocument(model.docSelected[0])"
+              class="md-icon-button" aria-label="Delete">
+              <md-icon>delete</md-icon>
+            </md-button>
+          </span>
           <span ng-if="model.display.searchResults || model.display.busy">Search results</span>
         </div>
         </md-toolbar>
