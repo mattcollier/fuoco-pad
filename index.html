@@ -120,6 +120,7 @@
               .then(function(result) {
                 self.search.results = result.data;
                 _display('searchResults');
+                $scope.$apply();
               });
           };
 
