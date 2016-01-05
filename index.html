@@ -261,7 +261,7 @@
         })
         .factory('searchService', function($http) {
           var service = {};
-          var serverBaseUrl = 'https://fuoco.floydcommons.com:3100';
+          var serverBaseUrl = 'https://fuoco.floydcommons.com:3000';
           service.search = function(query) {
             return Promise.resolve(
               $http.post(serverBaseUrl + '/search/' + query));
