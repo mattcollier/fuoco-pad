@@ -56,7 +56,7 @@
           self.docSortOrder = '-lastModified'
           self.searchDocSelected = [];
           self.documents = [];
-          self.serverBaseUrl = 'https://localhost:3000';
+          self.serverBaseUrl = 'https://fuoco.floydcommons.com:3000';
 
           self.display = {
             documents: false,
@@ -227,7 +227,7 @@
             var codeMirror = CodeMirror(document.getElementById('firepad'), { lineWrapping: true });
             // NOTE: `push` function is for Firebase API compatibility only.
             self.firepad = Firepad.fromCodeMirror({
-              server: 'https://localhost:3000',
+              server: 'https://fuoco.floydcommons.com:3000',
               document: myDocument.id,
               socket: sockets.documentRevisions,
               push: function() {
@@ -270,7 +270,7 @@
         })
         .factory('documentService', function($http) {
           var service = {};
-          var serverBaseUrl = 'https://localhost:3000';
+          var serverBaseUrl = 'https://fuoco.floydcommons.com:3000';
           service.post = function(documentId) {
             return Promise.resolve(
               $http.post(serverBaseUrl + '/document/' + documentId));
